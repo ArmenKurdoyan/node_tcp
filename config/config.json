@@ -1,0 +1,23 @@
+{
+  "development": {
+    "username": "armen",
+    "password": "p1ssw0rd",
+    "database": "database_development",
+    "host": "127.0.0.1",
+    "dialect": "postgres"
+  },
+  "test": {
+    "username": "armen",
+    "password": "p1ssw0rd",
+    "database": "database_test",
+    "host": "127.0.0.1",
+    "dialect": "postgres"
+  },
+  "production": {
+    "username": "armen",
+    "password": "p1ssw0rd",
+    "database": "database_production",
+    "host": "127.0.0.1",
+    "dialect": "postgres"
+  }
+}

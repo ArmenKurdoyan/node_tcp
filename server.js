@@ -7,7 +7,11 @@ class Server {
   #server;
   #routes = {
     get: {},
-    post: {},
+    post: {
+      //   ["/register"]: function (req) {
+      //     console.log(req);
+      //   },
+    },
     patch: {},
     put: {},
     delete: {},
@@ -16,10 +20,15 @@ class Server {
   constructor(port) {
     if (port) this.#port = port;
     this.#server = net.createServer((c) => {
-      c.on("data", (data) => {
+      c.on("data", async (data) => {
         const request = new Request(data.toString());
         const cb = this.#checkRoute(request);
-        const result = cb(request, new Response());
+        let result = null;
+        if(cb[Symbol.toStringTag]) {
+            result = await cb(request, new Response())
+        } else {
+            result = cb(request, new Response())
+        }
         c.write(result.toString());
         c.end();
       });
@@ -43,6 +52,7 @@ class Server {
   }
 
   post(url, cb) {
+    // console.log("cb ", cb)
     this.#routes.post[url] = cb;
   }
 
