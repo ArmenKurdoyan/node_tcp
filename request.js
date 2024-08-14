@@ -69,7 +69,7 @@ class Request {
       throw new Error(
         `${this.#headers["content-type"]} parser not implemented`
       );
-    this.#parsers[this.#headers["content-type"]](this.#body);
+    return this.#parsers[this.#headers["content-type"]](this.#body);
   }
 
   registerParser(applicationType, fn) {
