@@ -12,31 +12,8 @@ class Response {
     this.#headers[key] = value;
   }
 
-  setCookie(key, value, options = {}) {
-    let cookieString = `${key}=${value}`;
-    if (options.maxAge) {
-      cookieString += `; Max-Age=${options.maxAge}`;
-    }
-    if (options.expires) {
-      cookieString += `; Expires=${options.expires.toUTCString()}`;
-    }
-    if (options.httpOnly) {
-      cookieString += `; HttpOnly`;
-    }
-    if (options.secure) {
-      cookieString += `; Secure`;
-    }
-    if (options.path) {
-      cookieString += `; Path=${options.path}`;
-    }
-    if (options.domain) {
-      cookieString += `; Domain=${options.domain}`;
-    }
-    if (options.sameSite) {
-      cookieString += `; SameSite=${options.sameSite}`;
-    }
-
-    this.#cookies.push(cookieString);
+  setCookie(key, value) {
+    this.#cookies.push({ key, value });
   }
 
   status(code) {
@@ -61,12 +38,11 @@ class Response {
 
   #cookiesAsHeader() {
     if (this.#cookies.length) {
-      this.#headers["set-cookie"] = this.#cookies.join("; ");
-      //   this.#headers["set-cookie"] = this.#cookies
-      //     .map((cookie) => {
-      //       return `${cookie.key}=${cookie.value}`;
-      //     })
-      //     .join("; ");
+      this.#headers["set-cookie"] = this.#cookies
+        .map((cookie) => {
+          return `${cookie.key}=${cookie.value}`;
+        })
+        .join("; ");
     }
   }
 
