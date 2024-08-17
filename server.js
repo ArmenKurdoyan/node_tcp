@@ -7,7 +7,11 @@ class Server {
   #server;
   #routes = {
     get: {},
-    post: {},
+    post: {
+      //   ["/register"]: function (req) {
+      //     console.log(req);
+      //   },
+    },
     patch: {},
     put: {},
     delete: {},
@@ -20,14 +24,12 @@ class Server {
         const request = new Request(data.toString());
         const cb = this.#checkRoute(request);
         let result = null;
-        if (cb[Symbol.toStringTag]) {
-          result = await cb(request, new Response());
+        if(cb[Symbol.toStringTag]) {
+            result = await cb(request, new Response())
         } else {
-          result = cb(request, new Response());
+            result = cb(request, new Response())
         }
-        if (result) {
-          c.write(result.toString());
-        }
+        c.write(result.toString());
         c.end();
       });
     });
@@ -50,6 +52,7 @@ class Server {
   }
 
   post(url, cb) {
+    // console.log("cb ", cb)
     this.#routes.post[url] = cb;
   }
 

@@ -2,15 +2,6 @@ const Server = require("./server");
 const models = require("./models");
 const bcrypt = require("bcrypt");
 const util = require("util");
-const jwt = require("jsonwebtoken");
-const fs = require("fs");
-
-const { blacklistToken, isTokenBlacklisted } = require("./redis");
-
-require("dotenv").config();
-
-const formatDate = require("./utils/dateFormat");
-
 const saltRounds = 10;
 const server = new Server(process.env.PORT || 3000);
 
@@ -19,6 +10,7 @@ server.post("/timenow", (req, res) => {
   return res;
 });
 server.get("/timenow", (req, res) => {
+  console.log(req.headers);
   res.setCookie("a", 10);
   res.setHeader("authorization", "jwt(token)");
   res.json({ time: new Date().toUTCString() });
@@ -27,6 +19,7 @@ server.get("/timenow", (req, res) => {
 
 server.post("/register", (req, res) => {
   try {
+    let user;
     const body = req.parseBody();
     bcrypt.genSalt(saltRounds, function (err, salt) {
       bcrypt.hash(body.password, salt, function (err, hash) {
@@ -40,39 +33,30 @@ server.post("/register", (req, res) => {
     });
 
     res.status(201);
-    res.json({ message: "User registered successfully" });
+    res.json({ message: "User registered successfully", user });
   } catch (error) {
     console.error(error);
     res.status(418);
     res.json({ error: error });
   }
-
   return res;
 });
 
 server.post("/login", async (req, res) => {
   try {
     const body = req.parseBody();
-    const user = await models.sequelize.models.User.findAll({
+    const hash = await models.sequelize.models.User.findAll({
       where: {
         login: body.login,
       },
     });
-    const pass = user[0].dataValues.password;
+    const pass = hash[0].dataValues.password;
     const compare = util.promisify(bcrypt.compare);
     const result = await compare(body.password, pass);
 
     if (result) {
-      const privateKey = fs.readFileSync("./jwtRS256.key", "utf8");
-
-      const jwtSign = util.promisify(jwt.sign);
-      const token = await jwtSign(user[0].dataValues, privateKey, {
-        algorithm: "RS256",
-        expiresIn: "1h",
-      });
       res.status(200);
-      res.setHeader("token", token);
-      res.json({ message: token });
+      res.json({ message: "jwt" });
     } else {
       res.status(401);
       res.json({ message: err });
@@ -82,54 +66,10 @@ server.post("/login", async (req, res) => {
     res.status(418);
     res.json({ error: error });
   }
-
   return res;
 });
 
-server.get("/me", async (req, res) => {
-  try {
-    const userToken = req.headers.token;
-
-    if (await isTokenBlacklisted(userToken)) {
-      res.status(401);
-      res.json({ message: "Token is blacklisted" });
-      return res;
-    }
-
-    const decoder = util.promisify(jwt.verify);
-    const privateKey = fs.readFileSync("./jwtRS256.key", "utf8");
-
-    const user = await decoder(userToken, privateKey);
-    res.status(200);
-    res.json({
-      firstName: user.firstName,
-      lastName: user.lastName,
-      login: user.login,
-      expDate: formatDate(user.exp),
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(401);
-    res.json({ error: error });
-  }
-
-  return res;
-});
-
-server.post("/logout", async (req, res) => {
-  try {
-    const userToken = req.headers.token;
-    await blacklistToken(userToken);
-
-    res.status(200);
-    res.json({ message: "Logged out successfully" });
-  } catch (error) {
-    console.error(error);
-    res.status(500);
-    res.json({ error: error.message });
-  }
-  return res;
-});
+server.get("/me", (req, res) => {});
 
 server.onError((e) => {
   console.error(e);
